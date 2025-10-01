@@ -46,6 +46,43 @@
       command: kubeadm token create --print-join-command
       register: kubeadm_join
 
+    - name: Get latest etcd release tag
+      uri:
+        url: https://api.github.com/repos/etcd-io/etcd/releases/latest
+        return_content: yes
+      register: etcd_release
+
+    - name: Set etcd version fact
+      set_fact:
+        etcd_version: "{{ (etcd_release.json.tag_name | regex_replace('^v', '')) }}"
+
+    - name: Download etcd release archive
+      get_url:
+        url: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+        dest: "/tmp/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+        mode: "0644"
+
+    - name: Extract etcd release
+      unarchive:
+        src: "/tmp/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+        dest: "/tmp/"
+        remote_src: yes
+        creates: "/tmp/etcd-v{{ etcd_version }}-linux-amd64/etcdctl"
+
+    - name: Install etcdctl binary
+      copy:
+        src: "/tmp/etcd-v{{ etcd_version }}-linux-amd64/etcdctl"
+        dest: "/usr/local/bin/etcdctl"
+        mode: "0755"
+        remote_src: yes
+
+    - name: Install etcdutl binary
+      copy:
+        src: "/tmp/etcd-v{{ etcd_version }}-linux-amd64/etcdutl"
+        dest: "/usr/local/bin/etcdutl"
+        mode: "0755"
+        remote_src: yes
+
 - hosts: workers
   become: yes
   tasks:
