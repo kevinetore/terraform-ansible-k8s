@@ -1,0 +1,23 @@
+---
+- name: Install containerd on all Kubernetes nodes
+  hosts: all
+  become: yes
+  roles:
+    - geerlingguy.containerd
+
+  tasks:
+    - name: Ensure SystemdCgroup is enabled in containerd
+      lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: '^\s*SystemdCgroup\s*=\s*false'
+        line: "            SystemdCgroup = true"
+        backrefs: yes
+      notify:
+        - Restart containerd
+
+  handlers:
+    - name: Restart containerd
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes

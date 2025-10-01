@@ -1,0 +1,22 @@
+---
+- name: Disable swap on Kubernetes nodes
+  hosts: all
+  become: yes
+  tasks:
+    - name: Turn off swap
+      command: swapoff -a
+
+    - name: Remove any swap entry from /etc/fstab
+      replace:
+        path: /etc/fstab
+        regexp: '^\s*([^#]\S*\s+\S+\s+swap\s+.*)$'
+        replace: '# \1'
+
+    - name: Verify swap is off
+      command: swapon --show
+      register: swap_status
+      changed_when: false
+
+    - name: Print swap status
+      debug:
+        msg: "Swap status: {{ swap_status.stdout | default('No swap enabled') }}"

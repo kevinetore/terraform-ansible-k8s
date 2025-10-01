@@ -1,0 +1,87 @@
+- name: Install Kubeadm, Kubelet, and Kubectl on all Kubernetes nodes
+  hosts: all
+  become: yes
+  tasks:
+    - name: apt update
+      apt:
+        update_cache: yes
+
+    - name: apt-transport-https ca-certificates curl gpg
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gpg
+        state: present
+
+    - name: Create keyrings directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Download Kubernetes GPG key
+      get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.34/deb/Release.key
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: "0644"
+
+    - name: Download Kubernetes GPG key
+      get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.34/deb/Release.key
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: "0644"
+
+    - name: Convert key to dearmored .gpg
+      command: gpg --batch --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /etc/apt/keyrings/kubernetes-apt-keyring.asc
+
+    - name: Add Kubernetes apt repository
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /"
+        filename: kubernetes
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install kubeadm, kubelet, and kubectl
+      apt:
+        name:
+          - kubeadm=1.34.*
+          - kubelet=1.34.*
+          - kubectl=1.34.*
+        state: present
+        update_cache: yes
+
+    - name: Hold kubeadm
+      ansible.builtin.dpkg_selections:
+        name: kubeadm
+        selection: hold
+
+    - name: Hold kubelet
+      ansible.builtin.dpkg_selections:
+        name: kubelet
+        selection: hold
+
+    - name: Hold kubectl
+      ansible.builtin.dpkg_selections:
+        name: kubectl
+        selection: hold
+
+    - name: Enable and start kubelet service
+      systemd:
+        name: kubelet
+        enabled: yes
+        state: started
+
+    # https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/
+    - name: Configure crictl to use containerd socket
+      copy:
+        dest: /etc/crictl.yaml
+        content: |
+          runtime-endpoint: unix:///run/containerd/containerd.sock
+          image-endpoint: unix:///run/containerd/containerd.sock
+          timeout: 10
+          debug: false
+        mode: "0644"

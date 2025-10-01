@@ -1,0 +1,6 @@
+- import_playbook: disable-swap.yml
+- import_playbook: iptables.yml
+- import_playbook: containerd.yml
+- import_playbook: container-runtime.yml
+- import_playbook: kubeadm.yml
+- import_playbook: initialize_cluster.yml

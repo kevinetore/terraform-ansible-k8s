@@ -1,0 +1,46 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+.terraform/
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+darwin_arm64
+
+# Ansible
+*.retry
+*.log
+*.tmp
+vault.yml
+*.vault
+inventory.ini
+
+# SSH / keys
+*.pem
+*.key
+
+# Downloads / binaries
+runc.amd64
+cni-plugins-linux-amd64-*.tgz
+
+# Inventory overrides
+inventory_local.ini
+hosts.local
+
+# Python caches (if using Python scripts)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE/project files
+.vscode/
+.idea/
+
+# System files
+.DS_Store
